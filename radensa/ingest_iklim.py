@@ -178,15 +178,31 @@ def fetch_one_epi_week(fc_jakarta, year: int, week: int, nama_to_kode: dict) -> 
 
 
 def existing_weeks_in_supabase(client, tahun_min: int, tahun_max: int) -> dict:
-    """{(tahun,minggu): jumlah_baris} untuk rentang tahun yang relevan."""
+    """
+    {(tahun,minggu): jumlah_baris} untuk rentang tahun yang relevan.
+
+    Di-paginate eksplisit (.range()) -- PostgREST/supabase-py membatasi hasil
+    .execute() ke default page size (umumnya 1000 baris). Tanpa pagination,
+    begitu tabel sudah besar (pasca backfill penuh, >20rb baris), fungsi ini
+    diam-diam salah hitung dan menyangka minggu yang sudah lengkap sebagai
+    belum lengkap -> minggu itu diproses ulang sia-sia (boros panggilan GEE,
+    walau tidak merusak data karena upsert tetap idempoten).
+    """
     if client is None:
         return {}
-    r = (client.table("iklim_weekly").select("tahun,minggu")
-         .gte("tahun", tahun_min).lte("tahun", tahun_max).execute())
     counts: dict = {}
-    for row in r.data:
-        key = (row["tahun"], row["minggu"])
-        counts[key] = counts.get(key, 0) + 1
+    PAGE = 1000
+    offset = 0
+    while True:
+        r = (client.table("iklim_weekly").select("tahun,minggu")
+             .gte("tahun", tahun_min).lte("tahun", tahun_max)
+             .range(offset, offset + PAGE - 1).execute())
+        for row in r.data:
+            key = (row["tahun"], row["minggu"])
+            counts[key] = counts.get(key, 0) + 1
+        if len(r.data) < PAGE:
+            break
+        offset += PAGE
     return counts
 
 
