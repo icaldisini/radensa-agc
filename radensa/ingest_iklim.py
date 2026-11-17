@@ -30,6 +30,8 @@ import sys
 import time
 import unicodedata
 import re
+import queue
+import threading
 from datetime import timedelta
 from pathlib import Path
 
@@ -45,6 +47,13 @@ CLIMATE_COLS = [
     "curah_hujan_kumulatif", "curah_hujan_max_harian", "suhu_rata", "kelembapan_rata",
 ]
 REQUEST_DELAY_S = 0.3
+# .getInfo() ke GEE (httplib2 di baliknya) kadang hang TANPA batas waktu kalau
+# server lambat/jaringan terputus -- terbukti nyata: backfill pernah diam 1 jam
+# penuh di satu minggu tanpa error maupun progres sama sekali. Timeout + 1 retry
+# di sini mencegah itu terulang; executor dibuang (bukan di-reuse) supaya thread
+# yang macet tidak menumpuk selamanya di background.
+WEEK_TIMEOUT_S = 90
+WEEK_MAX_RETRY = 1
 
 
 def _norm(name: str) -> str:
@@ -206,6 +215,45 @@ def existing_weeks_in_supabase(client, tahun_min: int, tahun_max: int) -> dict:
     return counts
 
 
+def _fetch_week_with_timeout(fc_jakarta, year: int, week: int, nama_to_kode: dict) -> list[dict] | None:
+    """
+    Bungkus fetch_one_epi_week() dengan batas waktu WEEK_TIMEOUT_S detik.
+
+    Pakai threading.Thread(daemon=True) + queue, BUKAN ThreadPoolExecutor:
+    worker ThreadPoolExecutor standar bukan daemon thread, jadi begitu satu
+    minggu hang (persis yang terjadi nyata: backfill diam 1 jam penuh tanpa
+    progres), proses utama akan "lanjut" melewati timeout tapi interpreter
+    Python TIDAK PERNAH keluar di akhir skrip -- dia menunggu thread yang
+    macet itu selesai, yang mana tidak akan pernah terjadi. Thread daemon
+    otomatis ditinggal mati saat proses exit, tidak memblokir apa pun.
+    """
+    last_exc: BaseException | None = None
+    for attempt in range(1, WEEK_MAX_RETRY + 2):
+        q: queue.Queue = queue.Queue(maxsize=1)
+
+        def _target():
+            try:
+                q.put(("ok", fetch_one_epi_week(fc_jakarta, year, week, nama_to_kode)))
+            except BaseException as exc:  # noqa: BLE001 -- diteruskan ke thread utama, bukan ditelan
+                q.put(("err", exc))
+
+        t = threading.Thread(target=_target, daemon=True)
+        t.start()
+        t.join(timeout=WEEK_TIMEOUT_S)
+
+        if t.is_alive():
+            print(f"  TIMEOUT {year}-W{week:02d} (>{WEEK_TIMEOUT_S}s, percobaan {attempt}) "
+                  f"-- kemungkinan GEE lambat/jaringan terputus. Thread lama ditinggal (daemon).")
+            last_exc = TimeoutError(f"{year}-W{week:02d} timeout setelah {WEEK_MAX_RETRY + 1} percobaan")
+            continue
+
+        status, payload = q.get()
+        if status == "ok":
+            return payload
+        raise payload  # error data asli (bukan timeout) -- jangan ditelan, lempar lagi
+    raise last_exc
+
+
 def fetch_iklim_weekly(targets: list[tuple[int, int]], skip_existing: bool = True) -> list[dict]:
     project_id = init_ee()
     print(f"[ingest_iklim] Earth Engine siap (project={project_id})")
@@ -228,7 +276,7 @@ def fetch_iklim_weekly(targets: list[tuple[int, int]], skip_existing: bool = Tru
     skipped_no_data = []
     for i, (year, week) in enumerate(todo, 1):
         print(f"[{i}/{len(todo)}] {year}-W{week:02d} ...")
-        recs = fetch_one_epi_week(fc_jakarta, year, week, nama_to_kode)
+        recs = _fetch_week_with_timeout(fc_jakarta, year, week, nama_to_kode)
         if recs is None:
             skipped_no_data.append((year, week))
         else:
