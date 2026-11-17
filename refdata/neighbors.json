@@ -1,0 +1,619 @@
+{
+ "_catatan": "queen = Queen contiguity simetris untuk statistik spasial (Moran's I, LISA). feature = daftar yang dipakai fitur model spatial_kasus_tetangga; untuk Kepulauan Seribu memakai fallback 2 centroid terdekat dan sengaja berarah satu arah.",
+ "queen": {
+  "CAKUNG": [
+   "CILINCING",
+   "DUREN SAWIT",
+   "KELAPA GADING",
+   "PULOGADUNG"
+  ],
+  "CEMPAKA PUTIH": [
+   "JOHAR BARU",
+   "KELAPA GADING",
+   "KEMAYORAN",
+   "MATRAMAN",
+   "PULOGADUNG",
+   "SENEN"
+  ],
+  "CENGKARENG": [
+   "GROGOLPETAMBURAN",
+   "KALIDERES",
+   "KEBONJERUK",
+   "KEMBANGAN",
+   "PENJARINGAN"
+  ],
+  "CILANDAK": [
+   "JAGAKARSA",
+   "KEBAYORAN BARU",
+   "KEBAYORAN LAMA",
+   "MAMPANG PRAPATAN",
+   "PASAR MINGGU"
+  ],
+  "CILINCING": [
+   "CAKUNG",
+   "KELAPA GADING",
+   "KOJA"
+  ],
+  "CIPAYUNG": [
+   "CIRACAS",
+   "KRAMATJATI",
+   "MAKASAR"
+  ],
+  "CIRACAS": [
+   "CIPAYUNG",
+   "KRAMATJATI",
+   "PASARREBO"
+  ],
+  "DUREN SAWIT": [
+   "CAKUNG",
+   "JATINEGARA",
+   "MAKASAR",
+   "PULOGADUNG"
+  ],
+  "GAMBIR": [
+   "GROGOLPETAMBURAN",
+   "MENTENG",
+   "PALMERAH",
+   "SAWAH BESAR",
+   "SENEN",
+   "TAMANSARI",
+   "TAMBORA",
+   "TANAHABANG"
+  ],
+  "GROGOLPETAMBURAN": [
+   "CENGKARENG",
+   "GAMBIR",
+   "KEBONJERUK",
+   "PALMERAH",
+   "PENJARINGAN",
+   "TAMBORA"
+  ],
+  "JAGAKARSA": [
+   "CILANDAK",
+   "PASAR MINGGU",
+   "PASARREBO"
+  ],
+  "JATINEGARA": [
+   "DUREN SAWIT",
+   "KRAMATJATI",
+   "MAKASAR",
+   "MATRAMAN",
+   "PANCORAN",
+   "PULOGADUNG",
+   "TEBET"
+  ],
+  "JOHAR BARU": [
+   "CEMPAKA PUTIH",
+   "KEMAYORAN",
+   "SENEN"
+  ],
+  "KALIDERES": [
+   "CENGKARENG",
+   "PENJARINGAN"
+  ],
+  "KEBAYORAN BARU": [
+   "CILANDAK",
+   "KEBAYORAN LAMA",
+   "MAMPANG PRAPATAN",
+   "TANAHABANG"
+  ],
+  "KEBAYORAN LAMA": [
+   "CILANDAK",
+   "KEBAYORAN BARU",
+   "KEBONJERUK",
+   "PALMERAH",
+   "PESANGGRAHAN",
+   "TANAHABANG"
+  ],
+  "KEBONJERUK": [
+   "CENGKARENG",
+   "GROGOLPETAMBURAN",
+   "KEBAYORAN LAMA",
+   "KEMBANGAN",
+   "PALMERAH",
+   "PESANGGRAHAN"
+  ],
+  "KELAPA GADING": [
+   "CAKUNG",
+   "CEMPAKA PUTIH",
+   "CILINCING",
+   "KEMAYORAN",
+   "KOJA",
+   "PULOGADUNG",
+   "TANJUNG PRIOK"
+  ],
+  "KEMAYORAN": [
+   "CEMPAKA PUTIH",
+   "JOHAR BARU",
+   "KELAPA GADING",
+   "PADEMANGAN",
+   "SAWAH BESAR",
+   "SENEN",
+   "TANJUNG PRIOK"
+  ],
+  "KEMBANGAN": [
+   "CENGKARENG",
+   "KEBONJERUK",
+   "PESANGGRAHAN"
+  ],
+  "KEPULAUAN SERIBU SELATAN": [],
+  "KEPULAUAN SERIBU UTARA": [],
+  "KOJA": [
+   "CILINCING",
+   "KELAPA GADING",
+   "TANJUNG PRIOK"
+  ],
+  "KRAMATJATI": [
+   "CIPAYUNG",
+   "CIRACAS",
+   "JATINEGARA",
+   "MAKASAR",
+   "PANCORAN",
+   "PASAR MINGGU",
+   "PASARREBO",
+   "TEBET"
+  ],
+  "MAKASAR": [
+   "CIPAYUNG",
+   "DUREN SAWIT",
+   "JATINEGARA",
+   "KRAMATJATI"
+  ],
+  "MAMPANG PRAPATAN": [
+   "CILANDAK",
+   "KEBAYORAN BARU",
+   "PANCORAN",
+   "PASAR MINGGU",
+   "SETIABUDI"
+  ],
+  "MATRAMAN": [
+   "CEMPAKA PUTIH",
+   "JATINEGARA",
+   "MENTENG",
+   "PULOGADUNG",
+   "SENEN",
+   "TEBET"
+  ],
+  "MENTENG": [
+   "GAMBIR",
+   "MATRAMAN",
+   "SENEN",
+   "SETIABUDI",
+   "TANAHABANG",
+   "TEBET"
+  ],
+  "PADEMANGAN": [
+   "KEMAYORAN",
+   "PENJARINGAN",
+   "SAWAH BESAR",
+   "TAMANSARI",
+   "TAMBORA",
+   "TANJUNG PRIOK"
+  ],
+  "PALMERAH": [
+   "GAMBIR",
+   "GROGOLPETAMBURAN",
+   "KEBAYORAN LAMA",
+   "KEBONJERUK",
+   "TANAHABANG"
+  ],
+  "PANCORAN": [
+   "JATINEGARA",
+   "KRAMATJATI",
+   "MAMPANG PRAPATAN",
+   "PASAR MINGGU",
+   "SETIABUDI",
+   "TEBET"
+  ],
+  "PASAR MINGGU": [
+   "CILANDAK",
+   "JAGAKARSA",
+   "KRAMATJATI",
+   "MAMPANG PRAPATAN",
+   "PANCORAN",
+   "PASARREBO"
+  ],
+  "PASARREBO": [
+   "CIRACAS",
+   "JAGAKARSA",
+   "KRAMATJATI",
+   "PASAR MINGGU"
+  ],
+  "PENJARINGAN": [
+   "CENGKARENG",
+   "GROGOLPETAMBURAN",
+   "KALIDERES",
+   "PADEMANGAN",
+   "TAMANSARI",
+   "TAMBORA"
+  ],
+  "PESANGGRAHAN": [
+   "KEBAYORAN LAMA",
+   "KEBONJERUK",
+   "KEMBANGAN"
+  ],
+  "PULOGADUNG": [
+   "CAKUNG",
+   "CEMPAKA PUTIH",
+   "DUREN SAWIT",
+   "JATINEGARA",
+   "KELAPA GADING",
+   "MATRAMAN"
+  ],
+  "SAWAH BESAR": [
+   "GAMBIR",
+   "KEMAYORAN",
+   "PADEMANGAN",
+   "SENEN",
+   "TAMANSARI"
+  ],
+  "SENEN": [
+   "CEMPAKA PUTIH",
+   "GAMBIR",
+   "JOHAR BARU",
+   "KEMAYORAN",
+   "MATRAMAN",
+   "MENTENG",
+   "SAWAH BESAR"
+  ],
+  "SETIABUDI": [
+   "MAMPANG PRAPATAN",
+   "MENTENG",
+   "PANCORAN",
+   "TANAHABANG",
+   "TEBET"
+  ],
+  "TAMANSARI": [
+   "GAMBIR",
+   "PADEMANGAN",
+   "PENJARINGAN",
+   "SAWAH BESAR",
+   "TAMBORA"
+  ],
+  "TAMBORA": [
+   "GAMBIR",
+   "GROGOLPETAMBURAN",
+   "PADEMANGAN",
+   "PENJARINGAN",
+   "TAMANSARI"
+  ],
+  "TANAHABANG": [
+   "GAMBIR",
+   "KEBAYORAN BARU",
+   "KEBAYORAN LAMA",
+   "MENTENG",
+   "PALMERAH",
+   "SETIABUDI"
+  ],
+  "TANJUNG PRIOK": [
+   "KELAPA GADING",
+   "KEMAYORAN",
+   "KOJA",
+   "PADEMANGAN"
+  ],
+  "TEBET": [
+   "JATINEGARA",
+   "KRAMATJATI",
+   "MATRAMAN",
+   "MENTENG",
+   "PANCORAN",
+   "SETIABUDI"
+  ]
+ },
+ "feature": {
+  "CAKUNG": [
+   "CILINCING",
+   "DUREN SAWIT",
+   "KELAPA GADING",
+   "PULOGADUNG"
+  ],
+  "CEMPAKA PUTIH": [
+   "JOHAR BARU",
+   "KELAPA GADING",
+   "KEMAYORAN",
+   "MATRAMAN",
+   "PULOGADUNG",
+   "SENEN"
+  ],
+  "CENGKARENG": [
+   "GROGOLPETAMBURAN",
+   "KALIDERES",
+   "KEBONJERUK",
+   "KEMBANGAN",
+   "PENJARINGAN"
+  ],
+  "CILANDAK": [
+   "JAGAKARSA",
+   "KEBAYORAN BARU",
+   "KEBAYORAN LAMA",
+   "MAMPANG PRAPATAN",
+   "PASAR MINGGU"
+  ],
+  "CILINCING": [
+   "CAKUNG",
+   "KELAPA GADING",
+   "KOJA"
+  ],
+  "CIPAYUNG": [
+   "CIRACAS",
+   "KRAMATJATI",
+   "MAKASAR"
+  ],
+  "CIRACAS": [
+   "CIPAYUNG",
+   "KRAMATJATI",
+   "PASARREBO"
+  ],
+  "DUREN SAWIT": [
+   "CAKUNG",
+   "JATINEGARA",
+   "MAKASAR",
+   "PULOGADUNG"
+  ],
+  "GAMBIR": [
+   "GROGOLPETAMBURAN",
+   "MENTENG",
+   "PALMERAH",
+   "SAWAH BESAR",
+   "SENEN",
+   "TAMANSARI",
+   "TAMBORA",
+   "TANAHABANG"
+  ],
+  "GROGOLPETAMBURAN": [
+   "CENGKARENG",
+   "GAMBIR",
+   "KEBONJERUK",
+   "PALMERAH",
+   "PENJARINGAN",
+   "TAMBORA"
+  ],
+  "JAGAKARSA": [
+   "CILANDAK",
+   "PASAR MINGGU",
+   "PASARREBO"
+  ],
+  "JATINEGARA": [
+   "DUREN SAWIT",
+   "KRAMATJATI",
+   "MAKASAR",
+   "MATRAMAN",
+   "PANCORAN",
+   "PULOGADUNG",
+   "TEBET"
+  ],
+  "JOHAR BARU": [
+   "CEMPAKA PUTIH",
+   "KEMAYORAN",
+   "SENEN"
+  ],
+  "KALIDERES": [
+   "CENGKARENG",
+   "PENJARINGAN"
+  ],
+  "KEBAYORAN BARU": [
+   "CILANDAK",
+   "KEBAYORAN LAMA",
+   "MAMPANG PRAPATAN",
+   "TANAHABANG"
+  ],
+  "KEBAYORAN LAMA": [
+   "CILANDAK",
+   "KEBAYORAN BARU",
+   "KEBONJERUK",
+   "PALMERAH",
+   "PESANGGRAHAN",
+   "TANAHABANG"
+  ],
+  "KEBONJERUK": [
+   "CENGKARENG",
+   "GROGOLPETAMBURAN",
+   "KEBAYORAN LAMA",
+   "KEMBANGAN",
+   "PALMERAH",
+   "PESANGGRAHAN"
+  ],
+  "KELAPA GADING": [
+   "CAKUNG",
+   "CEMPAKA PUTIH",
+   "CILINCING",
+   "KEMAYORAN",
+   "KOJA",
+   "PULOGADUNG",
+   "TANJUNG PRIOK"
+  ],
+  "KEMAYORAN": [
+   "CEMPAKA PUTIH",
+   "JOHAR BARU",
+   "KELAPA GADING",
+   "PADEMANGAN",
+   "SAWAH BESAR",
+   "SENEN",
+   "TANJUNG PRIOK"
+  ],
+  "KEMBANGAN": [
+   "CENGKARENG",
+   "KEBONJERUK",
+   "PESANGGRAHAN"
+  ],
+  "KEPULAUAN SERIBU SELATAN": [
+   "KALIDERES",
+   "PENJARINGAN"
+  ],
+  "KEPULAUAN SERIBU UTARA": [
+   "KALIDERES",
+   "KEPULAUAN SERIBU SELATAN"
+  ],
+  "KOJA": [
+   "CILINCING",
+   "KELAPA GADING",
+   "TANJUNG PRIOK"
+  ],
+  "KRAMATJATI": [
+   "CIPAYUNG",
+   "CIRACAS",
+   "JATINEGARA",
+   "MAKASAR",
+   "PANCORAN",
+   "PASAR MINGGU",
+   "PASARREBO",
+   "TEBET"
+  ],
+  "MAKASAR": [
+   "CIPAYUNG",
+   "DUREN SAWIT",
+   "JATINEGARA",
+   "KRAMATJATI"
+  ],
+  "MAMPANG PRAPATAN": [
+   "CILANDAK",
+   "KEBAYORAN BARU",
+   "PANCORAN",
+   "PASAR MINGGU",
+   "SETIABUDI"
+  ],
+  "MATRAMAN": [
+   "CEMPAKA PUTIH",
+   "JATINEGARA",
+   "MENTENG",
+   "PULOGADUNG",
+   "SENEN",
+   "TEBET"
+  ],
+  "MENTENG": [
+   "GAMBIR",
+   "MATRAMAN",
+   "SENEN",
+   "SETIABUDI",
+   "TANAHABANG",
+   "TEBET"
+  ],
+  "PADEMANGAN": [
+   "KEMAYORAN",
+   "PENJARINGAN",
+   "SAWAH BESAR",
+   "TAMANSARI",
+   "TAMBORA",
+   "TANJUNG PRIOK"
+  ],
+  "PALMERAH": [
+   "GAMBIR",
+   "GROGOLPETAMBURAN",
+   "KEBAYORAN LAMA",
+   "KEBONJERUK",
+   "TANAHABANG"
+  ],
+  "PANCORAN": [
+   "JATINEGARA",
+   "KRAMATJATI",
+   "MAMPANG PRAPATAN",
+   "PASAR MINGGU",
+   "SETIABUDI",
+   "TEBET"
+  ],
+  "PASAR MINGGU": [
+   "CILANDAK",
+   "JAGAKARSA",
+   "KRAMATJATI",
+   "MAMPANG PRAPATAN",
+   "PANCORAN",
+   "PASARREBO"
+  ],
+  "PASARREBO": [
+   "CIRACAS",
+   "JAGAKARSA",
+   "KRAMATJATI",
+   "PASAR MINGGU"
+  ],
+  "PENJARINGAN": [
+   "CENGKARENG",
+   "GROGOLPETAMBURAN",
+   "KALIDERES",
+   "PADEMANGAN",
+   "TAMANSARI",
+   "TAMBORA"
+  ],
+  "PESANGGRAHAN": [
+   "KEBAYORAN LAMA",
+   "KEBONJERUK",
+   "KEMBANGAN"
+  ],
+  "PULOGADUNG": [
+   "CAKUNG",
+   "CEMPAKA PUTIH",
+   "DUREN SAWIT",
+   "JATINEGARA",
+   "KELAPA GADING",
+   "MATRAMAN"
+  ],
+  "SAWAH BESAR": [
+   "GAMBIR",
+   "KEMAYORAN",
+   "PADEMANGAN",
+   "SENEN",
+   "TAMANSARI"
+  ],
+  "SENEN": [
+   "CEMPAKA PUTIH",
+   "GAMBIR",
+   "JOHAR BARU",
+   "KEMAYORAN",
+   "MATRAMAN",
+   "MENTENG",
+   "SAWAH BESAR"
+  ],
+  "SETIABUDI": [
+   "MAMPANG PRAPATAN",
+   "MENTENG",
+   "PANCORAN",
+   "TANAHABANG",
+   "TEBET"
+  ],
+  "TAMANSARI": [
+   "GAMBIR",
+   "PADEMANGAN",
+   "PENJARINGAN",
+   "SAWAH BESAR",
+   "TAMBORA"
+  ],
+  "TAMBORA": [
+   "GAMBIR",
+   "GROGOLPETAMBURAN",
+   "PADEMANGAN",
+   "PENJARINGAN",
+   "TAMANSARI"
+  ],
+  "TANAHABANG": [
+   "GAMBIR",
+   "KEBAYORAN BARU",
+   "KEBAYORAN LAMA",
+   "MENTENG",
+   "PALMERAH",
+   "SETIABUDI"
+  ],
+  "TANJUNG PRIOK": [
+   "KELAPA GADING",
+   "KEMAYORAN",
+   "KOJA",
+   "PADEMANGAN"
+  ],
+  "TEBET": [
+   "JATINEGARA",
+   "KRAMATJATI",
+   "MATRAMAN",
+   "MENTENG",
+   "PANCORAN",
+   "SETIABUDI"
+  ]
+ },
+ "fallback_knn": {
+  "KEPULAUAN SERIBU SELATAN": [
+   "KALIDERES",
+   "PENJARINGAN"
+  ],
+  "KEPULAUAN SERIBU UTARA": [
+   "KALIDERES",
+   "KEPULAUAN SERIBU SELATAN"
+  ]
+ }
+}

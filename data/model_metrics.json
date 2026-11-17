@@ -1,0 +1,47 @@
+[
+  {
+    "key": "naive_baseline",
+    "name": "Naive_Baseline",
+    "R2": 0.6855,
+    "MAE": 3.3995,
+    "RMSE": 4.9453,
+    "MAPE": 54.3,
+    "best": false
+  },
+  {
+    "key": "poisson_ridge",
+    "name": "Poisson Regression (Ridge L2)",
+    "R2": 0.5745,
+    "MAE": 3.8907,
+    "RMSE": 5.752,
+    "MAPE": 48.1,
+    "best": false
+  },
+  {
+    "key": "xgboost",
+    "name": "XGBoost (Tweedie)",
+    "R2": 0.7638,
+    "MAE": 3.0087,
+    "RMSE": 4.2858,
+    "MAPE": 48.4,
+    "best": false
+  },
+  {
+    "key": "lightgbm",
+    "name": "LightGBM (Tweedie)",
+    "R2": 0.7733,
+    "MAE": 2.9483,
+    "RMSE": 4.1989,
+    "MAPE": 48.3,
+    "best": true
+  },
+  {
+    "key": "catboost",
+    "name": "CatBoost (Tweedie)",
+    "R2": 0.7707,
+    "MAE": 2.9232,
+    "RMSE": 4.2222,
+    "MAPE": 48.3,
+    "best": false
+  }
+]

@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+
+# artefak besar / sementara
+*.pkl
+*.zip
+checkpoint_*.csv
+shapefile_dir/
+gee_key.json
+service_account*.json
+
+# notebook outputs
+.ipynb_checkpoints/
+
+# artefak scraping lokal (sementara, tidak di-commit)
+data_raw/
+
+# notebook besar (15.8MB, banyak output gambar tertanam) - tahan dulu dari history
+# agar clone tetap ringan. Tambahkan lewat Git LFS nanti kalau perlu di-commit.
+RADENSA_AGC.ipynb

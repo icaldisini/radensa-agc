@@ -1,0 +1,62 @@
+[
+  {
+    "name": "spatial kasus",
+    "val": 0.155
+  },
+  {
+    "name": "kasus DBD rolling4",
+    "val": 0.106
+  },
+  {
+    "name": "kasus DBD lag1",
+    "val": 0.095
+  },
+  {
+    "name": "kecamatan endemisitas",
+    "val": 0.087
+  },
+  {
+    "name": "kasus DBD lag2",
+    "val": 0.075
+  },
+  {
+    "name": "spatial kasus tetangga lag2",
+    "val": 0.071
+  },
+  {
+    "name": "kasus DBD rolling8",
+    "val": 0.066
+  },
+  {
+    "name": "spatial kasus tetangga lag1",
+    "val": 0.054
+  },
+  {
+    "name": "minggu cos",
+    "val": 0.05
+  },
+  {
+    "name": "suhu rata lag2",
+    "val": 0.034
+  },
+  {
+    "name": "suhu rata",
+    "val": 0.028
+  },
+  {
+    "name": "minggu sin",
+    "val": 0.026
+  },
+  {
+    "name": "kelembapan rata",
+    "val": 0.025
+  },
+  {
+    "name": "kelembapan rata lag1",
+    "val": 0.025
+  },
+  {
+    "name": "suhu rata lag1",
+    "val": 0.024
+  }
+]

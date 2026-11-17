@@ -1,0 +1,12 @@
+{
+  "ewars": {
+    "total": 20592,
+    "exact_match": 17819,
+    "accuracy": 86.5
+  },
+  "ec": {
+    "total": 20592,
+    "exact_match": 17691,
+    "accuracy": 85.9
+  }
+}

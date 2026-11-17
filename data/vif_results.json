@@ -1,0 +1,86 @@
+[
+  {
+    "feature": "suhu_rata",
+    "vif": 35148.98
+  },
+  {
+    "feature": "suhu_sq",
+    "vif": 12064.78
+  },
+  {
+    "feature": "suhu_rata_lag1",
+    "vif": 9558.09
+  },
+  {
+    "feature": "suhu_rata_lag2",
+    "vif": 7100.13
+  },
+  {
+    "feature": "ch_suhu_interaksi",
+    "vif": 3604.32
+  },
+  {
+    "feature": "curah_hujan_kumulatif",
+    "vif": 3590.88
+  },
+  {
+    "feature": "kelembapan_rata_lag1",
+    "vif": 1576.9
+  },
+  {
+    "feature": "kelembapan_rata",
+    "vif": 1425.82
+  },
+  {
+    "feature": "kelembapan_rata_lag2",
+    "vif": 1274.91
+  },
+  {
+    "feature": "kasus_DBD_rolling4",
+    "vif": 88.51
+  },
+  {
+    "feature": "kasus_DBD_rolling8",
+    "vif": 31.31
+  },
+  {
+    "feature": "spatial_kasus_tetangga_lag1",
+    "vif": 27.51
+  },
+  {
+    "feature": "spatial_kasus_tetangga_lag2",
+    "vif": 20.27
+  },
+  {
+    "feature": "spatial_kasus",
+    "vif": 18.38
+  },
+  {
+    "feature": "kasus_DBD_lag2",
+    "vif": 17.58
+  },
+  {
+    "feature": "kasus_DBD_lag1",
+    "vif": 15.53
+  },
+  {
+    "feature": "curah_hujan_lag1",
+    "vif": 7.77
+  },
+  {
+    "feature": "curah_hujan_lag2",
+    "vif": 7.33
+  },
+  {
+    "feature": "kecamatan_endemisitas",
+    "vif": 6.03
+  },
+  {
+    "feature": "minggu_sin",
+    "vif": 2.23
+  },
+  {
+    "feature": "minggu_cos",
+    "vif": 1.79
+  }
+]

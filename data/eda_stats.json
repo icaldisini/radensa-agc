@@ -1,0 +1,113 @@
+{
+  "kasus_dbd": {
+    "mean": 6.4119,
+    "median": 4.0,
+    "std": 8.5416,
+    "skewness": 3.1437,
+    "kurtosis": 14.8937,
+    "min": 0,
+    "max": 106,
+    "pct_zero": 15.52,
+    "pct_gt_30": 2.5,
+    "histogram": {
+      "bins": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        15,
+        20,
+        30,
+        50,
+        999
+      ],
+      "counts": [
+        3195,
+        2714,
+        2281,
+        1833,
+        1581,
+        1287,
+        1084,
+        908,
+        1445,
+        1971,
+        909,
+        822,
+        447,
+        115
+      ]
+    }
+  },
+  "kabupaten_stats": {
+    "JAKARTA BARAT": {
+      "mean": 8.99,
+      "median": 6.0,
+      "std": 11.08
+    },
+    "JAKARTA PUSAT": {
+      "mean": 4.38,
+      "median": 3.0,
+      "std": 5.83
+    },
+    "JAKARTA SELATAN": {
+      "mean": 6.31,
+      "median": 4.0,
+      "std": 7.38
+    },
+    "JAKARTA TIMUR": {
+      "mean": 7.61,
+      "median": 5.0,
+      "std": 8.81
+    },
+    "JAKARTA UTARA": {
+      "mean": 9.33,
+      "median": 6.0,
+      "std": 11.27
+    },
+    "KEPULAUAN SERIBU": {
+      "mean": 0.19,
+      "median": 0.0,
+      "std": 0.51
+    }
+  },
+  "kuartal_stats": {
+    "Q1 Jan-Mar": {
+      "mean": 8.11,
+      "median": 5.0,
+      "std": 9.32
+    },
+    "Q2 Apr-Jun": {
+      "mean": 9.86,
+      "median": 6.0,
+      "std": 11.35
+    },
+    "Q3 Jul-Sep": {
+      "mean": 4.42,
+      "median": 3.0,
+      "std": 5.74
+    },
+    "Q4 Okt-Des": {
+      "mean": 3.25,
+      "median": 2.0,
+      "std": 3.8
+    }
+  },
+  "yearly_total": {
+    "2017": 8116,
+    "2018": 7059,
+    "2019": 20422,
+    "2020": 10915,
+    "2021": 8128,
+    "2022": 19167,
+    "2023": 10642,
+    "2024": 27001,
+    "2025": 20583
+  }
+}

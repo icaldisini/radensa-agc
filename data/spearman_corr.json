@@ -1,0 +1,142 @@
+[
+  {
+    "name": "kasus DBD log1p",
+    "spearman": 1.0,
+    "spearman_signed": 1.0,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "kasus DBD rolling4",
+    "spearman": 0.8276,
+    "spearman_signed": 0.8276,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "kasus DBD rolling8",
+    "spearman": 0.7979,
+    "spearman_signed": 0.7979,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "kasus DBD lag1",
+    "spearman": 0.7908,
+    "spearman_signed": 0.7908,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "kasus DBD lag2",
+    "spearman": 0.7667,
+    "spearman_signed": 0.7667,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "spatial kasus",
+    "spearman": 0.7541,
+    "spearman_signed": 0.7541,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "spatial kasus tetangga lag1",
+    "spearman": 0.7395,
+    "spearman_signed": 0.7395,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "spatial kasus tetangga lag2",
+    "spearman": 0.7187,
+    "spearman_signed": 0.7187,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "kecamatan endemisitas",
+    "spearman": 0.4909,
+    "spearman_signed": 0.4909,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "minggu sin",
+    "spearman": 0.3538,
+    "spearman_signed": 0.3538,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "kelembapan rata lag2",
+    "spearman": 0.3064,
+    "spearman_signed": 0.3064,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "kelembapan rata lag1",
+    "spearman": 0.284,
+    "spearman_signed": 0.284,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "kelembapan rata",
+    "spearman": 0.2631,
+    "spearman_signed": 0.2631,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "suhu rata lag2",
+    "spearman": 0.2279,
+    "spearman_signed": -0.2279,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "curah hujan lag2",
+    "spearman": 0.2226,
+    "spearman_signed": 0.2226,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "suhu rata lag1",
+    "spearman": 0.2059,
+    "spearman_signed": -0.2059,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "curah hujan lag1",
+    "spearman": 0.1968,
+    "spearman_signed": 0.1968,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "suhu rata",
+    "spearman": 0.1861,
+    "spearman_signed": -0.1861,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "suhu sq",
+    "spearman": 0.1861,
+    "spearman_signed": -0.1861,
+    "pval": 0.0,
+    "sig": "***"
+  },
+  {
+    "name": "curah hujan kumulatif",
+    "spearman": 0.1735,
+    "spearman_signed": 0.1735,
+    "pval": 0.0,
+    "sig": "***"
+  }
+]
