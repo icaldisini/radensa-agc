@@ -52,11 +52,27 @@ def load_master_kecamatan(client) -> pd.DataFrame:
 
 
 def load_neighbors(client, tipe: str = "feature") -> dict[str, list[str]]:
-    """tipe='feature' untuk fitur model, 'queen' untuk statistik spasial (Moran's I)."""
+    """
+    tipe='feature' untuk fitur model, 'queen' untuk statistik spasial (Moran's I).
+
+    Dikembalikan ber-key NAMA kecamatan (bukan kode_kec!) -- WAJIB konsisten
+    dengan kolom 'kecamatan' di panel (radensa/features.py: build_features()
+    melakukan lookup tetangga lewat df['kecamatan'], yang isinya nama, bukan
+    kode). Bug nyata yang pernah terjadi: versi awal fungsi ini mengembalikan
+    dict ber-key kode_kec ("4.32") sementara build_features mencari pakai nama
+    ("KEBAYORAN LAMA") -- mismatch itu lolos tanpa error saat training karena
+    get_fold_xy() memanggil .fillna(0) pada fitur spasial yang jadi NaN semua,
+    sehingga model terlatih dengan fitur spasial = 0 konstan tanpa ada yang
+    sadar. Baru ketahuan di forecast_step() yang tidak punya fallback diam-diam.
+    """
+    master = load_master_kecamatan(client)
+    kode_to_nama = dict(zip(master["kode_kec"], master["nama"]))
     rows = _paginated_select(client, "kecamatan_tetangga", "kode_kec,tetangga_kode", tipe=tipe)
     out: dict[str, list[str]] = {}
     for r in rows:
-        out.setdefault(r["kode_kec"], []).append(r["tetangga_kode"])
+        nama = kode_to_nama[r["kode_kec"]]
+        tetangga_nama = kode_to_nama[r["tetangga_kode"]]
+        out.setdefault(nama, []).append(tetangga_nama)
     return out
 
 
@@ -118,3 +134,33 @@ def load_panel(tahun_min: int | None = None, tahun_max: int | None = None) -> pd
     panel["kabupaten"] = panel["kode_kec"].map(kode_to_kab)
     panel = panel.sort_values(["kecamatan", "tahun", "minggu"]).reset_index(drop=True)
     return panel
+
+
+def load_iklim_raw() -> pd.DataFrame:
+    """Seluruh iklim_weekly APA ADANYA (tidak di-join DBD) -- basis klimatologi
+    fallback untuk minggu forecast yang belum punya observasi GEE asli."""
+    client = require_client()
+    rows = _paginated_select(
+        client, "iklim_weekly",
+        "kode_kec,tahun,minggu,curah_hujan_kumulatif,curah_hujan_max_harian,suhu_rata,kelembapan_rata",
+    )
+    if not rows:
+        raise RuntimeError("Tabel iklim_weekly kosong.")
+    return pd.DataFrame(rows)
+
+
+def load_iklim_for_weeks(targets: list[tuple[int, int]]) -> pd.DataFrame:
+    """Baris iklim_weekly APA ADANYA untuk (tahun,minggu) spesifik (observasi
+    GEE asli yang kebetulan sudah terbit untuk minggu forecast terdekat)."""
+    client = require_client()
+    out = []
+    for tahun, minggu in targets:
+        rows = _paginated_select(
+            client, "iklim_weekly",
+            "kode_kec,tahun,minggu,curah_hujan_kumulatif,curah_hujan_max_harian,suhu_rata,kelembapan_rata",
+            tahun=tahun, minggu=minggu,
+        )
+        out.extend(rows)
+    return pd.DataFrame(out) if out else pd.DataFrame(
+        columns=["kode_kec", "tahun", "minggu", "curah_hujan_kumulatif",
+                 "curah_hujan_max_harian", "suhu_rata", "kelembapan_rata"])
