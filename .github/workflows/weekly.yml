@@ -10,12 +10,17 @@ name: Radensa - Pipeline Mingguan
 # selalu "Connection reset by peer" tepat setelah TLS ClientHello, sebelum
 # HTTP/User-Agent apa pun terkirim -- jadi bukan soal header, ini blokir
 # jaringan aktif terhadap IP Azure/cloud). Scraping DBD dijalankan TERPISAH
-# via Windows Task Scheduler di komputer lokal (lihat scripts/setup_task_
-# scheduler.ps1), terjadwal lebih pagi di hari yang sama supaya datanya sudah
-# segar saat workflow ini jalan.
+# via Windows Task Scheduler di komputer lokal (scripts/run_ingest_dbd.ps1).
+#
+# JALUR UTAMA vs FALLBACK: scrape lokal yang SUKSES langsung memicu workflow
+# ini seketika itu juga (gh workflow run, lihat run_ingest_dbd.ps1) -- bukan
+# menunggu cron di bawah. Cron Rabu 20:00 WIB di sini HANYA jaring pengaman
+# kalau rantai pemicu itu gagal total (mis. laptop tidak pernah nyala
+# sepanjang hari Rabu) -- supaya forecast tetap ter-update tiap minggu
+# (pakai data lama) walau laptop lupa dinyalakan, bukan skip sepenuhnya.
 on:
   schedule:
-    - cron: '0 1 * * 3' # Rabu 01:00 UTC = 08:00 WIB
+    - cron: '0 13 * * 3' # Rabu 13:00 UTC = 20:00 WIB (fallback, lihat catatan di atas)
   workflow_dispatch: {} # tombol "Run workflow" manual di tab Actions
 
 jobs:
