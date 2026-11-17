@@ -53,6 +53,18 @@ PENYAKIT_DBD = 6
 REQUEST_TIMEOUT = 60
 REQUEST_DELAY_S = 0.6  # sopan terhadap server Dinkes antar-request
 
+# Tanpa User-Agent, requests default kirim "python-requests/x.y" yang umum
+# diblokir/dibatasi WAF situs pemerintah. Diamati nyata: request dari GitHub
+# Actions (python-requests default) timeout saat handshake SSL, padahal dari
+# komputer lokal selalu lancar -- kemungkinan terkait ini dan/atau IP cloud.
+REQUEST_HEADERS = {
+    "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Referer": "https://surveilans-dinkes.jakarta.go.id/sarsbaru/rs_rekap.php",
+}
+
 # Minggu di dalam jendela ini masih dianggap "bisa direvisi" -> is_final=False.
 # Disamakan dengan jendela rolling re-scrape default supaya konsisten:
 # selama sebuah minggu masih di-scrape ulang tiap minggu, dia belum final.
@@ -105,7 +117,7 @@ def _post_rekap(session: requests.Session, kab_kode: int, tahun: int,
         "tpar1": tahun, "tpar2": tahun,
         "tbl_proses": "P R O S E S",
     }
-    resp = session.post(BASE_URL, data=payload, timeout=REQUEST_TIMEOUT)
+    resp = session.post(BASE_URL, data=payload, headers=REQUEST_HEADERS, timeout=REQUEST_TIMEOUT)
     resp.raise_for_status()
     resp.encoding = "utf-8"
     return resp.text

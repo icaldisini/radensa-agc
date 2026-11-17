@@ -1,8 +1,18 @@
 name: Radensa - Pipeline Mingguan
 
-# Satu workflow mingguan menangani ingest + retrain + forecast. Retune penuh
-# (Optuna+CV) vs refit ringan diputuskan DI DALAM workflow ini lewat
+# Satu workflow mingguan menangani ingest iklim + retrain + forecast. Retune
+# penuh (Optuna+CV) vs refit ringan diputuskan DI DALAM workflow ini lewat
 # scripts/check_retune_due.py (~tiap 5 minggu) - bukan dua cron terpisah.
+#
+# CATATAN PENTING - ingest DBD TIDAK ada di workflow ini:
+# surveilans-dinkes.jakarta.go.id memblokir/me-reset koneksi dari rentang IP
+# cloud (diverifikasi langsung 17 Nov 2026: curl -v dari runner GitHub Actions
+# selalu "Connection reset by peer" tepat setelah TLS ClientHello, sebelum
+# HTTP/User-Agent apa pun terkirim -- jadi bukan soal header, ini blokir
+# jaringan aktif terhadap IP Azure/cloud). Scraping DBD dijalankan TERPISAH
+# via Windows Task Scheduler di komputer lokal (lihat scripts/setup_task_
+# scheduler.ps1), terjadwal lebih pagi di hari yang sama supaya datanya sudah
+# segar saat workflow ini jalan.
 on:
   schedule:
     - cron: '0 1 * * 3' # Rabu 01:00 UTC = 08:00 WIB
@@ -26,9 +36,6 @@ jobs:
 
       - name: Pasang dependensi
         run: pip install -r requirements.txt
-
-      - name: Ingest kasus DBD (rolling ~8 minggu terakhir)
-        run: python radensa/ingest_dbd.py
 
       - name: Ingest iklim GEE (rolling ~8 minggu terakhir)
         run: python radensa/ingest_iklim.py

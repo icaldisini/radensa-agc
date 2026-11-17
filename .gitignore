@@ -21,3 +21,6 @@ data_raw/
 # notebook besar (15.8MB, banyak output gambar tertanam) - tahan dulu dari history
 # agar clone tetap ringan. Tambahkan lewat Git LFS nanti kalau perlu di-commit.
 RADENSA_AGC.ipynb
+
+# log lokal task scheduler (jangan di-commit, bisa berisi info non-sensitif tapi tidak perlu di repo)
+logs/
