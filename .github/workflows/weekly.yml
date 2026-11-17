@@ -1,0 +1,56 @@
+name: Radensa - Pipeline Mingguan
+
+# Satu workflow mingguan menangani ingest + retrain + forecast. Retune penuh
+# (Optuna+CV) vs refit ringan diputuskan DI DALAM workflow ini lewat
+# scripts/check_retune_due.py (~tiap 5 minggu) - bukan dua cron terpisah.
+on:
+  schedule:
+    - cron: '0 1 * * 3' # Rabu 01:00 UTC = 08:00 WIB
+  workflow_dispatch: {} # tombol "Run workflow" manual di tab Actions
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      EE_SERVICE_ACCOUNT_JSON: ${{ secrets.EE_SERVICE_ACCOUNT_JSON }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Pasang dependensi
+        run: pip install -r requirements.txt
+
+      - name: Ingest kasus DBD (rolling ~8 minggu terakhir)
+        run: python radensa/ingest_dbd.py
+
+      - name: Ingest iklim GEE (rolling ~8 minggu terakhir)
+        run: python radensa/ingest_iklim.py
+
+      - name: Cek apakah retune penuh sudah waktunya
+        id: check_retune
+        run: python scripts/check_retune_due.py
+        continue-on-error: true
+
+      - name: Retune penuh (Optuna 100 trial + CV) - tiap ~5 minggu
+        if: steps.check_retune.outcome == 'success'
+        run: python radensa/train.py --n-trials 100
+
+      - name: Retrain ringan (params terakhir, tanpa Optuna) - mingguan
+        if: steps.check_retune.outcome == 'failure'
+        run: python radensa/train.py --refit-only
+
+      - name: Forecast 5 minggu ke depan + zonasi
+        run: python radensa/forecast.py
+
+      - name: Ringkasan run
+        if: always()
+        run: |
+          echo "### Radensa - ringkasan run $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Mode retrain: ${{ steps.check_retune.outcome == 'success' && 'RETUNE PENUH' || 'refit ringan' }}" >> "$GITHUB_STEP_SUMMARY"
