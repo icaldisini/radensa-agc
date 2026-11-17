@@ -263,7 +263,11 @@ def main() -> None:
         }
         client.table("model_runs").upsert(row, on_conflict="versi").execute()
         if not args.no_promote:
-            promote_if_better(client, source, versi)
+            # promote_if_better() mengharap key "R2" (format in-memory evaluate()),
+            # sementara `source` adalah baris mentah Supabase (kolom "r2" huruf
+            # kecil) -- normalisasi di sini, bukan di promote_if_better(), supaya
+            # fungsi itu tetap satu kontrak untuk kedua pemanggil (CV & refit).
+            promote_if_better(client, {"R2": source["r2"]}, versi)
         print(f"[train] Refit selesai dalam {(time.time() - t0):.1f}s -> {artifact_path}")
         return
 
@@ -295,6 +299,11 @@ def main() -> None:
                      "feature_cols": FEATURE_COLS, "params": last_params}, fh)
     print(f"[train] Model final disimpan: {artifact_path}")
 
+    # CATATAN: JSONB Supabase TIDAK menjamin urutan key tersimpan sesuai urutan
+    # insert -- diverifikasi langsung (dict di sini sengaja diurutkan desc,
+    # tapi hasil .select() dari Supabase bisa kembali teracak). Siapa pun yang
+    # membaca feature_importance dari tabel ini (dashboard, dsb.) WAJIB
+    # mengurutkan ulang sendiri: sorted(fi.items(), key=lambda kv: -kv[1]).
     fi = dict(zip(FEATURE_COLS, [int(x) for x in final_model.feature_importances_]))
     fi_sorted = dict(sorted(fi.items(), key=lambda kv: -kv[1]))
 
