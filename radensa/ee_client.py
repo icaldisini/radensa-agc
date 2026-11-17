@@ -20,6 +20,12 @@ import tempfile
 from functools import lru_cache
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Sama seperti radensa/supabase_client.py - dimuat sekali di sini supaya
+# semua pemanggil init_ee() otomatis kebagian .env.
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
+
 
 @lru_cache(maxsize=1)
 def init_ee() -> str:

@@ -16,7 +16,16 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
+from pathlib import Path
 from typing import Optional
+
+from dotenv import load_dotenv
+
+# Dimuat sekali di sini (bukan di tiap script pemanggil) supaya semua modul
+# yang mengimpor get_client() otomatis kebagian .env, tanpa harus ingat
+# memanggil load_dotenv() sendiri-sendiri (bug yang sempat bikin
+# ingest_iklim.py gagal saat dijalankan langsung sebagai CLI/background job).
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
 
 
 @lru_cache(maxsize=1)
