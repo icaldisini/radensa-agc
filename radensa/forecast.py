@@ -30,6 +30,7 @@ import argparse
 import pickle
 import sys
 import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
@@ -37,7 +38,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from radensa.data_loader import load_iklim_for_weeks, load_iklim_raw, load_neighbors, load_panel
-from radensa.epiweek import add_epi_weeks, epi_to_date
+from radensa.epiweek import add_epi_weeks, current_epi_week, epi_to_date
 from radensa.features import FEATURE_COLS, forecast_step
 from radensa.supabase_client import require_client
 from radensa.zonasi import (
@@ -128,12 +129,30 @@ def main() -> None:
     model, enc_map, meta, model_versi = load_active_model(client)
     print(f"[forecast] Model aktif: {model_versi}")
 
+    # Horizon dihitung dari MINGGU BERJALAN, bukan dari data terakhir. Data Dinkes
+    # selalu terlambat 1-2 minggu (mis. data terakhir W44 saat W46 berjalan),
+    # padahal yang dibutuhkan pengguna adalah "minggu ini + 4 minggu ke depan".
+    # Jadi forecast iteratif jalan dari (data terakhir + 1) sampai (minggu
+    # berjalan + n - 1); minggu yang sudah lewat hanya dipakai sebagai batu
+    # loncatan fitur lag dan TIDAK disimpan (skema membatasi horizon 1..5).
+    now_jkt = datetime.now(timezone(timedelta(hours=7))).date()
+    cur_week = current_epi_week(now_jkt)
+    target = add_epi_weeks(*cur_week, args.n_forecast - 1)
+    if epi_to_date(*target) <= epi_to_date(last_tahun, last_minggu):
+        target = add_epi_weeks(last_tahun, last_minggu, args.n_forecast)
     forecast_weeks = []
     cur = (last_tahun, last_minggu)
-    for _ in range(args.n_forecast):
+    while epi_to_date(*cur) < epi_to_date(*target):
         cur = add_epi_weeks(*cur, 1)
         forecast_weeks.append(cur)
-    print(f"[forecast] Forecast: {forecast_weeks[0]} s/d {forecast_weeks[-1]}")
+    store_weeks = [w for w in forecast_weeks if epi_to_date(*w) >= epi_to_date(*cur_week)]
+    if not store_weeks:
+        store_weeks = forecast_weeks[-args.n_forecast:]
+    store_weeks = store_weeks[:args.n_forecast]
+    horizon_of = {w: i for i, w in enumerate(store_weeks, 1)}
+    print(f"[forecast] Minggu berjalan: {cur_week[0]}-W{cur_week[1]:02d}")
+    print(f"[forecast] Dihitung: {forecast_weeks[0]} s/d {forecast_weeks[-1]} "
+          f"({len(forecast_weeks)} langkah); disimpan: {store_weeks[0]} s/d {store_weeks[-1]}")
 
     print("[forecast] Menyiapkan input iklim per minggu forecast...")
     climate_by_week = build_climate_for_forecast_weeks(forecast_weeks, kode_list)
@@ -169,12 +188,14 @@ def main() -> None:
         new_hist["kasus_DBD"] = pred
         history = pd.concat([history, new_hist], ignore_index=True)
 
+        if (tahun, minggu) not in horizon_of:
+            continue  # minggu lampau tanpa data: hanya batu loncatan, tidak disimpan
         for kec, kasus_pred in zip(feat["kecamatan"], pred):
             kode = nama_to_kode[kec]
             th = thresh_by_kode.get(kode, {})
             ecr = ec_by_key.get((kode, minggu), {})
             forecast_rows.append({
-                "kode_kec": kode, "tahun": tahun, "minggu": minggu, "horizon": h,
+                "kode_kec": kode, "tahun": tahun, "minggu": minggu, "horizon": horizon_of[(tahun, minggu)],
                 "kasus_pred": round(float(kasus_pred), 3),
                 "zona_ewars": assign_zona_ewars(kasus_pred, th.get("p50"), th.get("p75")),
                 "zona_ec": assign_zona_ec(kasus_pred, ecr.get("ec_mean"), ecr.get("ec_upper_yellow")),
@@ -188,7 +209,13 @@ def main() -> None:
     run_id = run.data[0]["id"]
     for r in forecast_rows:
         r["run_id"] = run_id
-    client.table("forecast").insert(forecast_rows).execute()
+    try:
+        client.table("forecast").insert(forecast_rows).execute()
+    except Exception:
+        # Jangan tinggalkan run kosong: view forecast_terkini memakai run TERBARU,
+        # jadi run tanpa baris akan mengosongkan aplikasi warga.
+        client.table("forecast_runs").delete().eq("id", run_id).execute()
+        raise
 
     zona_counts = pd.DataFrame(forecast_rows).groupby(["minggu", "zona_ewars"]).size().unstack(fill_value=0)
     print(f"\n[forecast] Distribusi zona EWARS per minggu:\n{zona_counts}")
