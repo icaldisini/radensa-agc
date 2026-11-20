@@ -147,6 +147,12 @@ def run_cv(df_raw, neighbors: dict, folds: list[dict], n_trials: int) -> tuple[l
         model.fit(X_tr, y_tr, eval_set=[(X_vl, y_vl)],
                   callbacks=[lgb.early_stopping(50, verbose=False), lgb.log_evaluation(0)])
         stage1 = evaluate(y_vl, np.clip(model.predict(X_vl), 0, None))
+        # Optuna menyetel n_estimators sebagai BATAS ATAS dengan early stopping, sedangkan model dua tahap
+        # dan model final dilatih tanpa early stopping. Tanpa koreksi ini, n_estimators yang ikut tersimpan
+        # (mis. 1400 pohon, kedalaman 9) jauh melebihi pohon efektif dan model overfit. Pakai pohon efektif.
+        best_iter = int(getattr(model, "best_iteration_", 0) or 0)
+        if best_iter > 0:
+            best_params = {**best_params, "n_estimators": best_iter}
 
         # Model yang benar-benar dipakai produksi: dua tahap, 21 fitur (radensa/twostage.py),
         # tanpa early stopping, tetangga = PREDIKSI tahap-1 (bukan kasus aktual minggu itu).
