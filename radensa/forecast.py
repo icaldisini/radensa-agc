@@ -41,6 +41,7 @@ from radensa.data_loader import load_iklim_for_weeks, load_iklim_raw, load_neigh
 from radensa.epiweek import add_epi_weeks, current_epi_week, epi_to_date
 from radensa.features import FEATURE_COLS, forecast_step
 from radensa.supabase_client import require_client
+from radensa.twostage import predict_two_stage
 from radensa.zonasi import (
     assign_zona_ec, assign_zona_ewars, compute_endemicity_channel,
     compute_thresholds, upsert_endemicity_channel, upsert_thresholds,
@@ -51,7 +52,9 @@ MODEL_DIR = Path(__file__).resolve().parent.parent / "models"
 CLIMATE_COLS = ["curah_hujan_kumulatif", "suhu_rata", "kelembapan_rata"]
 
 
-def load_active_model(client) -> tuple[object, dict, dict, str]:
+def load_active_model(client) -> tuple[object, object, dict, dict, str]:
+    """Return (model_tahap1, model_tahap2_atau_None, enc_map, meta, versi).
+    Artefak lama (sebelum 20 Nov 2026) tidak punya model_tahap2 -> forecast jatuh ke 20 fitur."""
     row = (client.table("model_runs").select("*").eq("is_active", True).limit(1).execute())
     if not row.data:
         raise RuntimeError(
@@ -68,7 +71,7 @@ def load_active_model(client) -> tuple[object, dict, dict, str]:
         )
     with artifact_path.open("rb") as fh:
         blob = pickle.load(fh)
-    return blob["model"], blob["enc_map"], meta, meta["versi"]
+    return blob["model"], blob.get("model2"), blob["enc_map"], meta, meta["versi"]
 
 
 def climatology_fallback(iklim_raw: pd.DataFrame) -> pd.DataFrame:
@@ -126,8 +129,9 @@ def main() -> None:
     last_tahun, last_minggu = max(zip(panel["tahun"], panel["minggu"]))
     print(f"[forecast] Data terakhir: {last_tahun}-W{last_minggu:02d}")
 
-    model, enc_map, meta, model_versi = load_active_model(client)
-    print(f"[forecast] Model aktif: {model_versi}")
+    model, model2, enc_map, meta, model_versi = load_active_model(client)
+    print(f"[forecast] Model aktif: {model_versi} "
+          f"({'dua tahap, 21 fitur' if model2 is not None else 'satu tahap, 20 fitur'})")
 
     # Horizon dihitung dari MINGGU BERJALAN, bukan dari data terakhir. Data Dinkes
     # selalu terlambat 1-2 minggu (mis. data terakhir W44 saat W46 berjalan),
@@ -178,7 +182,13 @@ def main() -> None:
 
         feat = forecast_step(history, tahun, minggu, iklim_wk, neighbors, enc_map)
         X = feat[FEATURE_COLS].fillna(0)
-        pred = np.clip(model.predict(X), 0, None)
+        if model2 is not None:
+            # Tahap 1 memprediksi semua kecamatan minggu ini; rata-rata prediksi tetangga jadi
+            # fitur ke-21 ("kasus tetangga minggu yang sama") untuk tahap 2 (radensa/twostage.py).
+            keys = pd.DataFrame({"kecamatan": feat["kecamatan"].to_numpy(), "tahun": tahun, "minggu": minggu})
+            _, pred = predict_two_stage(model, model2, X, keys, neighbors)
+        else:
+            pred = np.clip(model.predict(X), 0, None)
         feat = feat.assign(kasus_pred=pred)
 
         print(f"  Minggu {h} ({tahun}-W{minggu:02d}): rata-rata {pred.mean():.2f} kasus/kecamatan")

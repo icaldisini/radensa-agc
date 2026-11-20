@@ -40,8 +40,9 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from radensa.data_loader import load_neighbors, load_panel
 from radensa.epiweek import last_complete_epi_week
-from radensa.features import FEATURE_COLS, build_features, compute_endemisitas_map
+from radensa.features import FEATURE_COLS, FEATURE_COLS_21, build_features, compute_endemisitas_map
 from radensa.supabase_client import get_client
+from radensa.twostage import fit_two_stage, make_lgb, predict_two_stage
 
 RANDOM_STATE = 42
 TARGET_RAW = "kasus_DBD"
@@ -141,34 +142,44 @@ def run_cv(df_raw, neighbors: dict, folds: list[dict], n_trials: int) -> tuple[l
 
         X_tr, y_tr, X_vl, y_vl = get_fold_xy(df_feat, fold)
         best_params = tune_lgb(X_tr, y_tr, X_vl, y_vl, n_trials)
-        model = lgb.LGBMRegressor(**best_params, random_state=RANDOM_STATE, n_jobs=-1, verbosity=-1)
+        # Tahap-1 saja (20 fitur, early stopping di fold validasi): hanya sebagai pembanding.
+        model = make_lgb(best_params)
         model.fit(X_tr, y_tr, eval_set=[(X_vl, y_vl)],
                   callbacks=[lgb.early_stopping(50, verbose=False), lgb.log_evaluation(0)])
-        pred = np.clip(model.predict(X_vl), 0, None)
-        metrics = evaluate(y_vl, pred)
+        stage1 = evaluate(y_vl, np.clip(model.predict(X_vl), 0, None))
+
+        # Model yang benar-benar dipakai produksi: dua tahap, 21 fitur (radensa/twostage.py),
+        # tanpa early stopping, tetangga = PREDIKSI tahap-1 (bukan kasus aktual minggu itu).
+        tr_mask = df_feat["tahun"].isin(fold["train_years"]).to_numpy()
+        vl_mask = df_feat["tahun"].isin(fold["val_years"]).to_numpy()
+        m1, m2 = fit_two_stage(df_feat, neighbors, best_params, tr_mask)
+        _, p2 = predict_two_stage(m1, m2, X_vl, df_feat.loc[vl_mask, ["kecamatan", "tahun", "minggu"]], neighbors)
+        metrics = evaluate(y_vl, p2)
+        metrics["stage1_20fitur"] = {k: float(v) for k, v in stage1.items()}
         metrics.update(fold=fold["fold"], val_year=fold["val_years"][0])
         fold_results.append(metrics)
-        fitted.append({"model": model, "params": best_params, "enc_map": enc_map})
+        fitted.append({"model": m2, "params": best_params, "enc_map": enc_map})
 
         print(f"  Fold {fold['fold']} (train {fold['train_years'][0]}-{fold['train_years'][-1]} "
               f"-> val {fold['val_years'][0]}): "
               f"MAE={metrics['MAE']:.3f} RMSE={metrics['RMSE']:.3f} "
-              f"R2={metrics['R2']:.4f} MAPE={metrics['MAPE']:.1f}%")
+              f"R2={metrics['R2']:.4f} MAPE={metrics['MAPE']:.1f}%  "
+              f"[tahap-1 20 fitur: R2={stage1['R2']:.4f}]")
     return fold_results, fitted
 
 
-def train_final_model(df_raw, neighbors: dict, best_params: dict) -> tuple[lgb.LGBMRegressor, dict]:
-    """Model produksi: dilatih di SELURUH data (bukan hanya sampai fold terakhir)."""
+def train_final_model(df_raw, neighbors: dict, best_params: dict):
+    """
+    Model produksi: dilatih di SELURUH data (bukan hanya sampai fold terakhir).
+    Dua tahap (radensa/twostage.py): return (model_tahap1_20fitur, model_tahap2_21fitur, enc_map).
+    """
     enc_map = compute_endemisitas_map(df_raw)  # seluruh histori -- ini model final, bukan CV
     df_feat = build_features(df_raw, neighbors, endemisitas_map=enc_map)
-    X_all = df_feat[FEATURE_COLS].fillna(0)
-    y_all = df_feat[TARGET_RAW].astype(float).values
-    model = lgb.LGBMRegressor(**best_params, random_state=RANDOM_STATE, n_jobs=-1, verbosity=-1)
-    model.fit(X_all, y_all)
-    return model, enc_map
+    model1, model2 = fit_two_stage(df_feat, neighbors, best_params, np.ones(len(df_feat), dtype=bool))
+    return model1, model2, enc_map
 
 
-def refit_latest_params(client, df_raw, neighbors: dict) -> tuple[lgb.LGBMRegressor, dict, dict]:
+def refit_latest_params(client, df_raw, neighbors: dict):
     """
     "Retrain" ringan mingguan: fit ulang bobot model di seluruh data TERBARU,
     pakai hyperparameter hasil Optuna PALING TERAKHIR yang tersimpan di
@@ -189,8 +200,8 @@ def refit_latest_params(client, df_raw, neighbors: dict) -> tuple[lgb.LGBMRegres
             "minimal sekali dulu sebelum bisa refit mingguan."
         )
     best_params = row.data[0]["hyperparams"]
-    model, enc_map = train_final_model(df_raw, neighbors, best_params)
-    return model, enc_map, best_params
+    model, model2, enc_map = train_final_model(df_raw, neighbors, best_params)
+    return model, model2, enc_map, best_params
 
 
 def promote_if_better(client, new_metrics: dict, versi: str, max_regression_pct: float = 5.0) -> bool:
@@ -241,22 +252,23 @@ def main() -> None:
         if client is None:
             raise RuntimeError("--refit-only butuh Supabase (baca hyperparams model_runs terakhir).")
         print("[train] Mode refit ringan (tanpa Optuna/CV)...")
-        final_model, final_enc_map, last_params = refit_latest_params(client, df_raw, neighbors)
+        final_model, final_model2, final_enc_map, last_params = refit_latest_params(client, df_raw, neighbors)
         last_year, last_week = max(zip(df_raw["tahun"], df_raw["minggu"]))
-        versi = f"lgb-{last_year}w{last_week:02d}-refit"
+        versi = f"lgb2s-{last_year}w{last_week:02d}-refit"
         MODEL_DIR.mkdir(exist_ok=True)
         artifact_path = MODEL_DIR / f"{versi}.pkl"
         with artifact_path.open("wb") as fh:
-            pickle.dump({"model": final_model, "enc_map": final_enc_map,
-                         "feature_cols": FEATURE_COLS, "params": last_params}, fh)
-        fi = dict(zip(FEATURE_COLS, [int(x) for x in final_model.feature_importances_]))
+            pickle.dump({"model": final_model, "model2": final_model2, "enc_map": final_enc_map,
+                         "feature_cols": FEATURE_COLS, "feature_cols2": FEATURE_COLS_21,
+                         "params": last_params}, fh)
+        fi = dict(zip(FEATURE_COLS_21, [int(x) for x in final_model2.feature_importances_]))
         source = (client.table("model_runs").select("versi,r2,mae,rmse,mape")
                   .order("created_at", desc=True).limit(1).execute()).data[0]
         row = {
             "versi": versi, "algoritma": "LightGBM (Tweedie)", "hyperparams": last_params,
             "r2": source["r2"], "mae": source["mae"], "rmse": source["rmse"], "mape": source["mape"],
             "cv_detail": {"refit_dari": source["versi"],
-                          "catatan": "retrain ringan mingguan, metrik dari tuning terakhir, tidak diukur ulang"},
+                          "catatan": "retrain ringan mingguan (dua tahap, 21 fitur), metrik dari tuning terakhir, tidak diukur ulang"},
             "feature_importance": dict(sorted(fi.items(), key=lambda kv: -kv[1])),
             "data_sampai_tahun": int(last_year), "data_sampai_minggu": int(last_week),
             "artifact_path": str(artifact_path.name), "is_active": False,
@@ -279,7 +291,7 @@ def main() -> None:
         )
     print(f"[train] {len(folds)} fold CV (expanding window, min {args.min_train_years} tahun latih)")
 
-    print(f"\n[train] MODEL: LightGBM (Tweedie), {args.n_trials} trial Optuna/fold")
+    print(f"\n[train] MODEL: LightGBM (Tweedie), dua tahap 21 fitur, {args.n_trials} trial Optuna/fold")
     fold_results, fitted = run_cv(df_raw, neighbors, folds, args.n_trials)
 
     mean_r2 = float(np.mean([f["R2"] for f in fold_results]))
@@ -288,15 +300,16 @@ def main() -> None:
     last = fold_results[-1]
     last_params = fitted[-1]["params"]
     print(f"[train] Melatih model final (seluruh data) pakai params fold terakhir...")
-    final_model, final_enc_map = train_final_model(df_raw, neighbors, last_params)
+    final_model, final_model2, final_enc_map = train_final_model(df_raw, neighbors, last_params)
 
     MODEL_DIR.mkdir(exist_ok=True)
     last_year, last_week = max(zip(df_raw["tahun"], df_raw["minggu"]))
-    versi = f"lgb-{last_year}w{last_week:02d}"
+    versi = f"lgb2s-{last_year}w{last_week:02d}"
     artifact_path = MODEL_DIR / f"{versi}.pkl"
     with artifact_path.open("wb") as fh:
-        pickle.dump({"model": final_model, "enc_map": final_enc_map,
-                     "feature_cols": FEATURE_COLS, "params": last_params}, fh)
+        pickle.dump({"model": final_model, "model2": final_model2, "enc_map": final_enc_map,
+                     "feature_cols": FEATURE_COLS, "feature_cols2": FEATURE_COLS_21,
+                     "params": last_params}, fh)
     print(f"[train] Model final disimpan: {artifact_path}")
 
     # CATATAN: JSONB Supabase TIDAK menjamin urutan key tersimpan sesuai urutan
@@ -304,7 +317,7 @@ def main() -> None:
     # tapi hasil .select() dari Supabase bisa kembali teracak). Siapa pun yang
     # membaca feature_importance dari tabel ini (dashboard, dsb.) WAJIB
     # mengurutkan ulang sendiri: sorted(fi.items(), key=lambda kv: -kv[1]).
-    fi = dict(zip(FEATURE_COLS, [int(x) for x in final_model.feature_importances_]))
+    fi = dict(zip(FEATURE_COLS_21, [int(x) for x in final_model2.feature_importances_]))
     fi_sorted = dict(sorted(fi.items(), key=lambda kv: -kv[1]))
 
     if client is not None:

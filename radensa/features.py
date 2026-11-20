@@ -14,6 +14,9 @@ langkah iterasi, dengan kasus_DBD minggu-minggu sebelumnya sebagai actual
 untuk minggu lampau dan sebagai prediksi model untuk minggu yang baru saja
 diramalkan -- lihat forecast_step()).
 
+21 fitur sejak 20 Nov 2026: 20 FEATURE_COLS di bawah + SPATIAL_SAMEWEEK (kasus tetangga di MINGGU
+YANG SAMA, hanya lewat model dua tahap di radensa/twostage.py; nilai aktualnya tidak ada saat meramal).
+
 20 FEATURE_COLS (4 domain, dari RADENSA_AGC.ipynb cell 29):
   Epidemiologi lag  : kasus_DBD_lag1, kasus_DBD_lag2,
                        kasus_DBD_rolling4, kasus_DBD_rolling8,
@@ -50,7 +53,32 @@ FEATURE_COLS = [
     "ch_suhu_interaksi", "suhu_sq",
     "kecamatan_endemisitas",
 ]
+# Fitur ke-21 (mulai 20 Nov 2026): rata-rata kasus kecamatan tetangga pada MINGGU YANG SAMA
+# dengan baris yang diprediksi. Nilai aktualnya TIDAK tersedia saat meramal, jadi di training
+# dan di forecast nilainya adalah rata-rata PREDIKSI tahap-1 para tetangga (model dua tahap,
+# lihat radensa/twostage.py), bukan kasus aktual.
+SPATIAL_SAMEWEEK = "spatial_kasus"
+FEATURE_COLS_21 = FEATURE_COLS + [SPATIAL_SAMEWEEK]
 MINGGU_PER_TAHUN = 52  # lihat catatan epi week 53 di atas
+
+
+def neighbor_mean(df: pd.DataFrame, values, neighbors: dict[str, list[str]]) -> np.ndarray:
+    """
+    Rata-rata `values` para tetangga tiap baris pada (tahun, minggu) yang SAMA.
+    df  : kolom kecamatan, tahun, minggu (satu baris per kecamatan-minggu)
+    values : array sejajar baris df (mis. prediksi tahap-1)
+    Return array sejajar df; NaN bila kecamatan tidak punya tetangga.
+    """
+    tmp = df[["kecamatan", "tahun", "minggu"]].copy()
+    tmp["v"] = np.asarray(values, dtype=float)
+    wide = tmp.pivot(index=["tahun", "minggu"], columns="kecamatan", values="v")
+    out = pd.DataFrame(index=wide.index, columns=wide.columns, dtype=float)
+    for kec in wide.columns:
+        nb = [n for n in neighbors.get(kec, []) if n in wide.columns]
+        out[kec] = wide[nb].mean(axis=1) if nb else np.nan
+    long = out.reset_index().melt(id_vars=["tahun", "minggu"], var_name="kecamatan", value_name="nb")
+    merged = tmp[["kecamatan", "tahun", "minggu"]].merge(long, on=["kecamatan", "tahun", "minggu"], how="left")
+    return merged["nb"].to_numpy()
 
 
 def build_features(
